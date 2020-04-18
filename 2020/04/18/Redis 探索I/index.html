@@ -6,17 +6,19 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Tag: hexo | Ginkgo 个人博客</title>
+  <title>Redis 探索I | Ginkgo 个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="吾生也有涯，而知也无涯">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Ginkgo 个人博客">
-<meta property="og:url" content="http://yoursite.com/tags/hexo/index.html">
+  <meta name="description" content="redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。  一、Redis 数据流动的基本路线  客户端有数据到来   epoll 通知 worker 有数据到来   worker 启动 I&#x2F;O 读操作去读取到来的网络数据   对网络数据进行一系列计算   worker 启动 I&#x2F;O 写操作，将数据由 TCP 发送回客户端">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 探索I">
+<meta property="og:url" content="http://yoursite.com/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2I/index.html">
 <meta property="og:site_name" content="Ginkgo 个人博客">
-<meta property="og:description" content="吾生也有涯，而知也无涯">
+<meta property="og:description" content="redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。  一、Redis 数据流动的基本路线  客户端有数据到来   epoll 通知 worker 有数据到来   worker 启动 I&#x2F;O 读操作去读取到来的网络数据   对网络数据进行一系列计算   worker 启动 I&#x2F;O 写操作，将数据由 TCP 发送回客户端">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-18T02:18:09.000Z">
+<meta property="article:modified_time" content="2020-04-18T13:27:22.654Z">
 <meta property="article:author" content="Ginkgo">
-<meta property="article:tag" content="后端">
+<meta property="article:tag" content="redis">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="Ginkgo 个人博客" type="application/atom+xml">
@@ -137,68 +139,211 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-Redis 探索I" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2020" class="archive-year">2020</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2020/04/15/test/" class="archive-article-date">
-  	<time datetime="2020-04-15T14:48:07.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-15</time>
-</a>
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2020/04/15/test/">测试 hexo</a>
+    <h1 class="article-title" itemprop="name">
+      Redis 探索I
     </h1>
   
 
-        <div class="article-info info-on-right">
-          
+        
+        <a href="/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2I/" class="archive-article-date">
+  	<time datetime="2020-04-18T02:18:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-18</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <blockquote>
+<p>redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。</p>
+</blockquote>
+<h1 id="一、Redis-数据流动的基本路线"><a href="#一、Redis-数据流动的基本路线" class="headerlink" title="一、Redis 数据流动的基本路线"></a>一、Redis 数据流动的基本路线</h1><blockquote>
+<ol>
+<li>客户端有数据到来  </li>
+<li>epoll 通知 worker 有数据到来  </li>
+<li>worker 启动 I/O 读操作去读取到来的网络数据  </li>
+<li>对网络数据进行一系列计算  </li>
+<li>worker 启动 I/O 写操作，将数据由 TCP 发送回客户端</li>
+</ol>
+</blockquote>
+<h1 id="二、Reids-单线程工作模式"><a href="#二、Reids-单线程工作模式" class="headerlink" title="二、Reids 单线程工作模式"></a>二、Reids 单线程工作模式</h1><h3 id="2-1-数据库软件串行化设计的好处"><a href="#2-1-数据库软件串行化设计的好处" class="headerlink" title="2.1 数据库软件串行化设计的好处"></a>2.1 数据库软件串行化设计的好处</h3><blockquote>
+<ul>
+<li>避免了并发情况下的事务性操作（加锁）</li>
+<li>例如：并发来两个对同一个数据的 ++ 操作。若非串行化设计，则要进行事务性，实现对数据的原子性操作；而在串行设计中，只需要依次操作即可。 </li>
+</ul>
+</blockquote>
+<h3 id="2-2-Redis早期的单线程设计"><a href="#2-2-Redis早期的单线程设计" class="headerlink" title="2.2 Redis早期的单线程设计"></a>2.2 Redis早期的单线程设计</h3><blockquote>
+<ul>
+<li>数据处理：I/O读-&gt;串行化计算-&gt;I/O写  </li>
+<li>缺陷：如果有多个数据到来，只能等待上一个数据处理完成。单线程只能工作在CPU的一个核心上，对如今多核CPU有资源的浪费。</li>
+</ul>
+</blockquote>
+<h3 id="2-3-Redis改进的单线程设计"><a href="#2-3-Redis改进的单线程设计" class="headerlink" title="2.3 Redis改进的单线程设计"></a>2.3 Redis改进的单线程设计</h3><blockquote>
+<ul>
+<li>利用多个线程（I/O threads）去执行I/O的读取和发送操作，计算的工作依旧由单线程去完成，以次保证串行化的原子操作，又将等待阻塞的时间缩短。</li>
+<li>注：I/O 的多线程操作并不会影响一个连接（connection）的有序性。</li>
+</ul>
+</blockquote>
+<h3 id="2-4-总结"><a href="#2-4-总结" class="headerlink" title="2.4 总结"></a>2.4 总结</h3><blockquote>
+<ul>
+<li>无论那个版本的redis都只有一个工作线程，始终保持对数据的原子操作。之后的版本使用了I/O多线程，减少了数据等待时间。</li>
+</ul>
+</blockquote>
+<h1 id="三、Redis-的5大Value类型场景"><a href="#三、Redis-的5大Value类型场景" class="headerlink" title="三、Redis 的5大Value类型场景"></a>三、Redis 的5大Value类型场景</h1><h3 id="3-1-string"><a href="#3-1-string" class="headerlink" title="3.1 string"></a>3.1 string</h3><blockquote>
+<ol>
+<li>作字符串存储<br>进行对字符串的追加等操作。<br>可用于缓存数据等。</li>
+<li>作数值操作<br>当执行一次 INCR 或 DEVCR 成功后，该数据的内部数据类型（type）会设定为 int，下一次执行 INCR 与 DECR 时将直接进行相关操作，不进行类型判定。而 INCR 和 DECR 为原子操作（单线程）。<br>可用于秒杀、限流等。</li>
+</ol>
+<ul>
+<li>存BITMAP<br>对bit位进行按位与或非、统计1的个数等操作。<br>(1) 可用于统计用户任意时间窗口内登录几次。即用户第几天登录了就在偏移几的地方设置1，当统计用户全年登录几次时，使用 BITCOUNT 统计1的个数即可。<br>(2) 可用于统计月活。统计用户每日状态，然后对所有统计的用户进行 按位或（OR）操作，再BITCOUNT其中1的个数，即是月活量。</li>
+</ul>
+</blockquote>
+<h3 id="3-2-list"><a href="#3-2-list" class="headerlink" title="3.2 list"></a>3.2 list</h3><blockquote>
+<ol>
+<li>栈</li>
+<li>队列</li>
+<li>数组</li>
+</ol>
+</blockquote>
+<h3 id="3-3-hash"><a href="#3-3-hash" class="headerlink" title="3.3 hash"></a>3.3 hash</h3><blockquote>
+<ol>
+<li>可用于做订单详情页，将订单编号做 key 值存储。</li>
+<li>可用于聚合数据：用户的不同数据可能放在不同的库中，当用户要获取这些数据时，可以将不同库中的数据聚合到 redis 中，除第一次访问外，下次用户访问的时候，直接返回聚合的数据。</li>
+</ol>
+</blockquote>
+<h3 id="3-4-set"><a href="#3-4-set" class="headerlink" title="3.4 set"></a>3.4 set</h3><blockquote>
+<ol>
+<li>去重<br>可用作推荐系统等。</li>
+<li>无序<br>可用作实现随机事件，例如抽奖、验证码等。</li>
+</ol>
+</blockquote>
+<h3 id="3-5-hset"><a href="#3-5-hset" class="headerlink" title="3.5 hset"></a>3.5 hset</h3><blockquote>
+<p>hset是有序集合，其底层数据结构实现是跳跃表(skiplist)。其排序是根据score值的大小排序的，默认是升序排列。</p>
+<ol>
+<li>去重<br>可用作推荐系统等。</li>
+<li>有序<br>可用作排行榜与动态翻页的实现。</li>
+</ol>
+</blockquote>
+<h1 id="四、应用场景总结"><a href="#四、应用场景总结" class="headerlink" title="四、应用场景总结"></a>四、应用场景总结</h1><blockquote>
+<p>缓存、统计bitmap、数值计算（秒杀、限流）、数据迁出（无状态）、聚合数据（详情页）、抽奖（随机时间）、集合（推荐系统）、有序结合（排行榜、翻页）、锁、发布订阅…  </p>
+<ol>
+<li>场景举例：若此时很多来源不一的并发客户端会对商品A进行CRUD操作，此时如何保证客户端操作的一致性？<br>将不同的商品路由到不同的服务器（同一服务器只处理同一商品），此时服务A在调用redis的时候，A的所有操作都压在一个connection中，使得对其的CRUD操作都是有序的。这样避免了商品随机路由到服务器上后，为了保证对redis操作的有序性，而牵引出的事务性操作。</li>
+</ol>
+</blockquote>
+
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
 	<div class="article-tag tagcloud">
 		<i class="icon-price-tags icon"></i>
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">随笔</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color3">测试</a>
-        		</li>
-      		 
-        		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">hexo</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color1">redis</a>
         		</li>
       		
 		</ul>
 	</div>
 
-          
+      
 
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2I/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-  
-    </div></section>
+
   
 
-    
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+  
+  
+
+  
+
+  
+
+  
 
 
           </div>
@@ -221,9 +366,9 @@
 	var yiliaConfig = {
 		mathjax: true,
 		isHome: false,
-		isPost: false,
+		isPost: true,
 		isArchive: false,
-		isTag: true,
+		isTag: false,
 		isCategory: false,
 		open_in_new: false,
 		toc_hide_index: true,
@@ -308,15 +453,7 @@ MathJax.Hub.Queue(function() {
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">随笔</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color3">测试</a>
-              </li>
-             
-              <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">hexo</a>
+                <a href="javascript:void(0)" class="js-tag color1">redis</a>
               </li>
             
             <div class="clearfix"></div>
