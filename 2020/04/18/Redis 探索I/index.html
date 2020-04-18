@@ -8,15 +8,15 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>Redis 探索I | Ginkgo 个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。  一、Redis 数据流动的基本路线  客户端有数据到来   epoll 通知 worker 有数据到来   worker 启动 I&#x2F;O 读操作去读取到来的网络数据   对网络数据进行一系列计算   worker 启动 I&#x2F;O 写操作，将数据由 TCP 发送回客户端">
+  <meta name="description" content="redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Redis 探索I">
 <meta property="og:url" content="http://yoursite.com/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2I/index.html">
 <meta property="og:site_name" content="Ginkgo 个人博客">
-<meta property="og:description" content="redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。  一、Redis 数据流动的基本路线  客户端有数据到来   epoll 通知 worker 有数据到来   worker 启动 I&#x2F;O 读操作去读取到来的网络数据   对网络数据进行一系列计算   worker 启动 I&#x2F;O 写操作，将数据由 TCP 发送回客户端">
+<meta property="og:description" content="redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2020-04-18T02:18:09.000Z">
-<meta property="article:modified_time" content="2020-04-18T13:27:22.654Z">
+<meta property="article:modified_time" content="2020-04-18T13:32:41.470Z">
 <meta property="article:author" content="Ginkgo">
 <meta property="article:tag" content="redis">
 <meta name="twitter:card" content="summary">
@@ -162,8 +162,9 @@
         <blockquote>
 <p>redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。</p>
 </blockquote>
-<h1 id="一、Redis-数据流动的基本路线"><a href="#一、Redis-数据流动的基本路线" class="headerlink" title="一、Redis 数据流动的基本路线"></a>一、Redis 数据流动的基本路线</h1><blockquote>
-<ol>
+<a id="more"></a>
+<blockquote>
+<h1 id="一、Redis-数据流动的基本路线"><a href="#一、Redis-数据流动的基本路线" class="headerlink" title="一、Redis 数据流动的基本路线"></a>一、Redis 数据流动的基本路线</h1><ol>
 <li>客户端有数据到来  </li>
 <li>epoll 通知 worker 有数据到来  </li>
 <li>worker 启动 I/O 读操作去读取到来的网络数据  </li>
