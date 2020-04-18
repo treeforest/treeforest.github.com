@@ -6,17 +6,17 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>Redis 探索I | Ginkgo 个人博客</title>
+  <title>Redis 探索Ⅰ | Ginkgo 个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Redis 探索I">
-<meta property="og:url" content="http://yoursite.com/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2I/index.html">
+<meta property="og:title" content="Redis 探索Ⅰ">
+<meta property="og:url" content="http://yoursite.com/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2%E2%85%A0/index.html">
 <meta property="og:site_name" content="Ginkgo 个人博客">
 <meta property="og:description" content="redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-04-18T02:18:09.000Z">
-<meta property="article:modified_time" content="2020-04-18T13:32:41.470Z">
+<meta property="article:published_time" content="2020-04-18T13:51:09.000Z">
+<meta property="article:modified_time" content="2020-04-18T13:52:09.740Z">
 <meta property="article:author" content="Ginkgo">
 <meta property="article:tag" content="redis">
 <meta name="twitter:card" content="summary">
@@ -139,20 +139,20 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Redis 探索I" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-Redis 探索Ⅰ" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      Redis 探索I
+      Redis 探索Ⅰ
     </h1>
   
 
         
-        <a href="/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2I/" class="archive-article-date">
-  	<time datetime="2020-04-18T02:18:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-18</time>
+        <a href="/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2%E2%85%A0/" class="archive-article-date">
+  	<time datetime="2020-04-18T13:51:09.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-04-18</time>
 </a>
         
       </header>
@@ -163,19 +163,21 @@
 <p>redis是二进制安全的，只存储客户端传输过来的二进制数据。数据是什么编码redis并不关注，序列化与反序列化交由客户端完成。</p>
 </blockquote>
 <a id="more"></a>
-<blockquote>
-<h1 id="一、Redis-数据流动的基本路线"><a href="#一、Redis-数据流动的基本路线" class="headerlink" title="一、Redis 数据流动的基本路线"></a>一、Redis 数据流动的基本路线</h1><ol>
+
+<h1 id="一、Redis-数据流动的基本路线"><a href="#一、Redis-数据流动的基本路线" class="headerlink" title="一、Redis 数据流动的基本路线"></a>一、Redis 数据流动的基本路线</h1><blockquote>
+<ol>
 <li>客户端有数据到来  </li>
-<li>epoll 通知 worker 有数据到来  </li>
-<li>worker 启动 I/O 读操作去读取到来的网络数据  </li>
+<li>epoll 通知工作线程(worker)有数据到来  </li>
+<li>工作线程(worker)启动 I/O read 操作去读取到来的网络数据  </li>
 <li>对网络数据进行一系列计算  </li>
-<li>worker 启动 I/O 写操作，将数据由 TCP 发送回客户端</li>
+<li>工作线程(worker)启动 I/O write 操作，将数据写入网络缓冲区</li>
+<li>将数据由 TCP 发送回客户端</li>
 </ol>
 </blockquote>
 <h1 id="二、Reids-单线程工作模式"><a href="#二、Reids-单线程工作模式" class="headerlink" title="二、Reids 单线程工作模式"></a>二、Reids 单线程工作模式</h1><h3 id="2-1-数据库软件串行化设计的好处"><a href="#2-1-数据库软件串行化设计的好处" class="headerlink" title="2.1 数据库软件串行化设计的好处"></a>2.1 数据库软件串行化设计的好处</h3><blockquote>
 <ul>
 <li>避免了并发情况下的事务性操作（加锁）</li>
-<li>例如：并发来两个对同一个数据的 ++ 操作。若非串行化设计，则要进行事务性，实现对数据的原子性操作；而在串行设计中，只需要依次操作即可。 </li>
+<li>例如：并发来两个对同一个数据的 ++ 操作。若非串行化设计，则要开启事务性，从而实现对数据的原子性操作；而在串行设计中，只需要依次操作即可，省去了加锁过程，提升了处理速度。 </li>
 </ul>
 </blockquote>
 <h3 id="2-2-Redis早期的单线程设计"><a href="#2-2-Redis早期的单线程设计" class="headerlink" title="2.2 Redis早期的单线程设计"></a>2.2 Redis早期的单线程设计</h3><blockquote>
@@ -186,23 +188,21 @@
 </blockquote>
 <h3 id="2-3-Redis改进的单线程设计"><a href="#2-3-Redis改进的单线程设计" class="headerlink" title="2.3 Redis改进的单线程设计"></a>2.3 Redis改进的单线程设计</h3><blockquote>
 <ul>
-<li>利用多个线程（I/O threads）去执行I/O的读取和发送操作，计算的工作依旧由单线程去完成，以次保证串行化的原子操作，又将等待阻塞的时间缩短。</li>
+<li>利用多个线程（I/O threads）去执行I/O的读取和发送操作，计算的工作依旧由单线程去完成，以次保证串行化的原子操作，以此来缩短阻塞等待的时间。</li>
 <li>注：I/O 的多线程操作并不会影响一个连接（connection）的有序性。</li>
 </ul>
 </blockquote>
 <h3 id="2-4-总结"><a href="#2-4-总结" class="headerlink" title="2.4 总结"></a>2.4 总结</h3><blockquote>
 <ul>
-<li>无论那个版本的redis都只有一个工作线程，始终保持对数据的原子操作。之后的版本使用了I/O多线程，减少了数据等待时间。</li>
+<li>无论那个版本的redis都只有一个工作线程，始终保持对数据的原子操作。而之后的版本使用了I/O多线程，减少了数据等待时间。</li>
 </ul>
 </blockquote>
 <h1 id="三、Redis-的5大Value类型场景"><a href="#三、Redis-的5大Value类型场景" class="headerlink" title="三、Redis 的5大Value类型场景"></a>三、Redis 的5大Value类型场景</h1><h3 id="3-1-string"><a href="#3-1-string" class="headerlink" title="3.1 string"></a>3.1 string</h3><blockquote>
 <ol>
 <li>作字符串存储<br>进行对字符串的追加等操作。<br>可用于缓存数据等。</li>
 <li>作数值操作<br>当执行一次 INCR 或 DEVCR 成功后，该数据的内部数据类型（type）会设定为 int，下一次执行 INCR 与 DECR 时将直接进行相关操作，不进行类型判定。而 INCR 和 DECR 为原子操作（单线程）。<br>可用于秒杀、限流等。</li>
+<li>存BITMAP<br>对bit位进行按位与或非、统计1的个数等操作。<br>(1) 可用于统计用户任意时间窗口内登录几次。即用户第几天登录了就在偏移几的地方设置1，当统计用户全年登录几次时，使用 BITCOUNT 统计1的个数即可。<br>(2) 可用于统计月活。统计用户每日状态，然后对所有统计的用户进行按位或（OR）操作，再BITCOUNT其中1的个数，即是月活量。</li>
 </ol>
-<ul>
-<li>存BITMAP<br>对bit位进行按位与或非、统计1的个数等操作。<br>(1) 可用于统计用户任意时间窗口内登录几次。即用户第几天登录了就在偏移几的地方设置1，当统计用户全年登录几次时，使用 BITCOUNT 统计1的个数即可。<br>(2) 可用于统计月活。统计用户每日状态，然后对所有统计的用户进行 按位或（OR）操作，再BITCOUNT其中1的个数，即是月活量。</li>
-</ul>
 </blockquote>
 <h3 id="3-2-list"><a href="#3-2-list" class="headerlink" title="3.2 list"></a>3.2 list</h3><blockquote>
 <ol>
@@ -231,9 +231,9 @@
 </ol>
 </blockquote>
 <h1 id="四、应用场景总结"><a href="#四、应用场景总结" class="headerlink" title="四、应用场景总结"></a>四、应用场景总结</h1><blockquote>
-<p>缓存、统计bitmap、数值计算（秒杀、限流）、数据迁出（无状态）、聚合数据（详情页）、抽奖（随机时间）、集合（推荐系统）、有序结合（排行榜、翻页）、锁、发布订阅…  </p>
+<p>缓存、统计bitmap、数值计算（秒杀、限流）、数据迁出（无状态）、聚合数据（详情页）、随机事件（抽奖）、集合（推荐系统）、有序集合（排行榜、翻页）、锁、发布订阅…  </p>
 <ol>
-<li>场景举例：若此时很多来源不一的并发客户端会对商品A进行CRUD操作，此时如何保证客户端操作的一致性？<br>将不同的商品路由到不同的服务器（同一服务器只处理同一商品），此时服务A在调用redis的时候，A的所有操作都压在一个connection中，使得对其的CRUD操作都是有序的。这样避免了商品随机路由到服务器上后，为了保证对redis操作的有序性，而牵引出的事务性操作。</li>
+<li>场景举例：若此时很多来源不一的并发客户端会对商品A进行CRUD操作，此时如何保证客户端操作的一致性？<br>将不同的商品路由到不同的服务器（同一服务器只处理同一商品），此时服务A在调用redis的时候，A的所有操作都会被压在一个connection中，使得对其的CRUD操作都是有序的。<br>若商品是随机路由到服务器上，此时为了保证对 redis 中数据操作的有序性，将牵引出一系列的事务性操作。</li>
 </ol>
 </blockquote>
 
@@ -305,7 +305,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2I/" alt="微信分享二维码">
+      <img src="//pan.baidu.com/share/qrcode?url=http://yoursite.com/2020/04/18/Redis%20%E6%8E%A2%E7%B4%A2%E2%85%A0/" alt="微信分享二维码">
     </div>
 </div>
 
