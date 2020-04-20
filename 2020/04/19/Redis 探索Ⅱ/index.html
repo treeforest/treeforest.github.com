@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-cn">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/treeforest.github.io/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/treeforest.github.io/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/treeforest.github.io/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/treeforest.github.io/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/treeforest.github.io/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/treeforest.github.io/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/treeforest.github.io/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="redis," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="本文主要讨论了Redis的持久化、Redis可用性、Redis锁以及AKF微服务划分原则的相关话题。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis 探索Ⅱ">
+<meta property="og:url" content="http://yoursite.com/2020/04/19/Redis%20%E6%8E%A2%E7%B4%A2%E2%85%A1/index.html">
+<meta property="og:site_name" content="Ginkgo技术博客">
+<meta property="og:description" content="本文主要讨论了Redis的持久化、Redis可用性、Redis锁以及AKF微服务划分原则的相关话题。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-04-19T13:31:02.000Z">
+<meta property="article:modified_time" content="2020-04-20T07:37:59.953Z">
+<meta property="article:author" content="Ginkgo">
+<meta property="article:tag" content="redis">
+<meta name="twitter:card" content="summary">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/treeforest.github.io/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2020/04/19/Redis 探索Ⅱ/"/>
+
+
+
+
+
+  <title>Redis 探索Ⅱ | Ginkgo技术博客</title>
+  
+
+
+
+
+
+
+
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-cn">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/treeforest.github.io/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Ginkgo技术博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">Go C++</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/treeforest.github.io/" rel="section">
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/treeforest.github.io/tags" rel="section">
+            
+            Tags
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/treeforest.github.io/2020/04/19/Redis%20%E6%8E%A2%E7%B4%A2%E2%85%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Ginkgo">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/treeforest.github.io/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ginkgo技术博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Redis 探索Ⅱ</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-04-19T21:31:02+08:00">
+                2020-04-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>本文主要讨论了Redis的持久化、Redis可用性、Redis锁以及AKF微服务划分原则的相关话题。</p>
+<a id="more"></a>
+
+<h1 id="一、Redis-持久化"><a href="#一、Redis-持久化" class="headerlink" title="一、Redis 持久化"></a>一、Redis 持久化</h1><h3 id="1-1-持久化的必要性"><a href="#1-1-持久化的必要性" class="headerlink" title="1.1 持久化的必要性"></a>1.1 持久化的必要性</h3><ol>
+<li>因为Redis是放在内存做缓存使用，如果宕机，那么就会损失数据。<br>如果缓存的数据是可有可无的，那么损失的数据没什么影响。<br>如果缓存的数据是相对比较重要的，那么在数据丢失后，服务无法在Redis请求到数据时，就会去数据库请求，这样就可能造成后面数据库的压力倍增。则在这种情况下，是有持久化的必要的。</li>
+<li>持久化的开启，会引发一系列I/O的操作，而造成一定性能的下降。故是否持久化，还是依据具体环境配置。</li>
+</ol>
+<h3 id="1-2-RDB-与-AOF"><a href="#1-2-RDB-与-AOF" class="headerlink" title="1.2 RDB 与 AOF"></a>1.2 RDB 与 AOF</h3><p>数据写到磁盘的流程：数据从内存写入到磁盘时，会经过kernel内核再写入磁盘。而kernel里有一个buffer缓冲区，默认情况下只有当buffer里面的数据满的时候，OS才会主动将buffer里面的数据刷写到磁盘。如果主动执行flush操作，则buffer中的数据会立刻被刷写到磁盘。</p>
+<ol>
+<li>持久化的两种方案：快照(RDB)与日志(AOF)</li>
+<li>RDB工作模式：将Redis中的二进制数据直接存入磁盘中（拍快照），但是拍快照的时间间隔较长，例如一小时拍一次快照。当Redis宕机后重启，Redis就会直接将磁盘的快照数据读入内存，不需要做数据的转换。<br>优点：恢复数据的速度快。<br>缺点：拍快照的时间间隔较长，丢失的数据大。</li>
+<li>AOF工作模式：将Redis所执行的写操作指令都写入磁盘，在宕机开启后，需要读取日志中的指令，然后逐个执行一遍对应的写操作，以此来达到恢复数据的目的。具体AOF有三种工作级别，分别是appendfsync always、appendfsync everysec与appendsync no，三种分别具有不同的优缺点。</li>
+<li>AOF的appendfsync always：采用将每次操作都立刻执行flush写入磁盘。<br>优点：数据的完整性强。极端情况下，最多丢一条记录。<br>缺点：操作过于频繁，导致性能下降。</li>
+<li>AOF的appendfsync everysec（默认级别）：采用每秒flush一次，将buffer中的数据刷写到磁盘。<br>优点：最多丢失一秒钟的数据。极端情况下，在一秒之内，刚好buffer写满时宕机，至多丢失一个buffer的数据。<br>缺点：可能会丢失一秒钟的数据。</li>
+<li>AOF的appendsync no：完全交由OS来执行flush来将buffer中的数据刷写到磁盘。<br>优点：至多丢一个buffer的数据<br>缺点：没有一秒的刷写操作，比第二种方案丢数据的可能性更大。例如，一分钟的时间内，前50s秒<br>来了10条写操作指令，此时都存在buffer中，但是buffer没有满，在第51秒宕机，则会丢失这51之内的数据。如果第二种方案，每秒执行一次flush，则前50秒的数据已刷写到磁盘。</li>
+</ol>
+<h3 id="1-3-Redis对-RDB-与-AOF-的使用"><a href="#1-3-Redis对-RDB-与-AOF-的使用" class="headerlink" title="1.3 Redis对 RDB 与 AOF 的使用"></a>1.3 Redis对 RDB 与 AOF 的使用</h3><ol>
+<li>早期Redis<br>默认开启的是RDB，虽然可手动开启AOF，但是开启AOF后，重启只会加载AOF，前面写入磁盘的RDB将会丢失。</li>
+<li>目前Redis<br>采用的是RDB与AOF的混合使用，简称R&amp;A（也叫AOF）。例如每隔一小时拍一次快照，拍完快照后将这一小时之内的日志删除，而在之后的一小时之内继续进行日志记录。这样重启之后就先加载RDB，然后加载一个小时之内的日志写操作并执行即可。这样既加快了恢复速度，又减少了数据的丢失。</li>
+</ol>
+<h1 id="二、Redis-可用性"><a href="#二、Redis-可用性" class="headerlink" title="二、Redis 可用性"></a>二、Redis 可用性</h1><p>两个问题：单点故障与压力（即存储上线）。<br>单点故障问题：即单个实例可能宕机，而在宕机后如何保证服务继续运行。<br>压力问题：即单个实例内存空间有限，在数据超过实例容量的情况下如何保证服务继续运行。</p>
+<h3 id="2-1-单点故障问题解决方案"><a href="#2-1-单点故障问题解决方案" class="headerlink" title="2.1 单点故障问题解决方案"></a>2.1 单点故障问题解决方案</h3><p>多准备几个Redis，在实例A挂了之后，后面的实例B可以接上。而实例B与实例A的数据是否完全相同，就会产生数据同步的问题。</p>
+<ol>
+<li>主备-强一致性：客户端往A写入一条指令，A收到后先往B写，B写成功后A再写，然后A再告诉客户端我们俩都写成功了。<br>问题：若A与B的网络出现问题，或B出现宕机。这样都会导致A持续等待B的返回，而客户端又在等A的数据返回，这种情况下在外界看来就是Redis已经挂了。即强一致性破坏了可用性。</li>
+<li>主从-弱一致性（Redis默认的工作模式）：客户端往A写入一条指令，A写成功后立刻返回，然后A再往B中写。<br>问题：在A宕机后，可能A有部分数据还没有进行对B写，则B接管后的数据会少于A中数据的量。</li>
+<li>最终一致性技术（Redis未采用）</li>
+</ol>
+<h3 id="2-2-压力问题解决方案"><a href="#2-2-压力问题解决方案" class="headerlink" title="2.2 压力问题解决方案"></a>2.2 压力问题解决方案</h3><ol>
+<li>多维度划分<br>若一个数据很大，若能将该数据拆分到不同的维度，则将不同维度的数据存放在不同的Redis中，这些Redis无数据同步的问题。在保证可用性的问题上，只需要再对不同维度Redis做一次主从复制即可。</li>
+<li>分片（若无法多维度划分）<br>按照区间或hash取模等映射算法，将数据的不同部分存入多个不同的实例中（分治）。</li>
+</ol>
+<h1 id="三、AKF微服务划分原则"><a href="#三、AKF微服务划分原则" class="headerlink" title="三、AKF微服务划分原则"></a>三、AKF微服务划分原则</h1><p>以类似三维的划分进行服务处理。<br>x轴：采用主从主备的模式，提升Redis的可靠性（解决单点故障问题）<br>y轴：对服务分治处理，使得服务的功能单一性，降低耦合性。<br>z轴：对数据存储进行分片划分（解决压力问题）</p>
+<h3 id="3-1-分片集群问题"><a href="#3-1-分片集群问题" class="headerlink" title="3.1 分片集群问题"></a>3.1 分片集群问题</h3><p>若将分片的映射算法放在服务中实现，那么在更新映射算法的时候会很麻烦。</p>
+<h3 id="3-2-代理集群问题"><a href="#3-2-代理集群问题" class="headerlink" title="3.2 代理集群问题"></a>3.2 代理集群问题</h3><ol>
+<li>若将数据全都交给代理，再通过代理将数据扔给服务，以此可实现解耦。但是，若客户端数据并发，代理层在实现负载均衡上就很复杂。</li>
+<li>Redis是否能自身解决代理层的负载均衡问题？<br>可在每个Redis实例前都绑定一个Proxy以及存储自身映射范围与其他实例映射范围及其信息的记录。当一个服务请求过来，代理收到数据后，先判断其映射的范围是否是该Redis，若是，则将数据交付给Redis；若不是，则在记录中找到映射该数据的Redis信息，并告知服务应该去这个Redis执行操作。这样就没有了中间代理层的负载均衡问题，使得每个Redis联合起来实现了负载均衡的问题。</li>
+</ol>
+<h1 id="四、Redis-是否适合做分布式锁"><a href="#四、Redis-是否适合做分布式锁" class="headerlink" title="四、Redis 是否适合做分布式锁"></a>四、Redis 是否适合做分布式锁</h1><p>了解一：何时需要锁？<br>多个并发客户端，都会对公共资源进行相关写操作时。<br>了解二：锁如何解决问题？<br>谁得到锁，谁就获得访问资源的资格。</p>
+<h3 id="4-1-单Redis实例实现锁的方法"><a href="#4-1-单Redis实例实现锁的方法" class="headerlink" title="4.1 单Redis实例实现锁的方法"></a>4.1 单Redis实例实现锁的方法</h3><p>哪个服务在Redis中成功创建了key（获得锁），则谁就获得访问公共资源的问题。操作完成后，移除key（释放锁），则其他服务就可在获得锁。<br>注：假设此时有A、B两个服务并发竞争锁。</p>
+<ol>
+<li>问题1：A抢到锁后，A挂了，锁不会消失，导致后面的服务无法占有锁，导致死锁问题。<br>解决：对key做过期设置，例如30s之后自动消失。</li>
+<li>问题2：A抢到锁后，Redis挂了，在Redis重启后，锁还在，但是A已经不会再进行对锁的释放操作，同样是死锁问题。<br>解决：同问题一，设置key的过期时间</li>
+<li>问题3：A抢到锁后，Redis挂了，在Redis重启后，锁消失（并非A主动释放），此时B获得锁，会造成A与B并发访问资源的问题。<br>解决：开启AOF的每操作，但是这样Redis性能就会退化到MySql级别。若开启主从复制，但是是弱一致，并无法解决。</li>
+<li>总结：一个Redis实现锁并不可靠</li>
+</ol>
+<h3 id="4-2-多Redis实例实现锁的方法"><a href="#4-2-多Redis实例实现锁的方法" class="headerlink" title="4.2 多Redis实例实现锁的方法"></a>4.2 多Redis实例实现锁的方法</h3><p>哪个服务抢占到过半的Redis实例，谁就能访问资源<br>注：假设此时有三个Redis实例R1、R2、R3。</p>
+<ol>
+<li>问题1：当三个服务抢三个资源，每个都占有一把锁，此时谁都不能达到过半。<br>解决：当对R1、R2、R3轮询获取锁之后，若还是不能获得过半实例的服务，就释放获得的锁，然后再开启新的一轮竞争。</li>
+<li>问题2：极端情况下，每个服务一直都不能抢占过半，导致服务无法进行下去。</li>
+<li>总结：Redis不适合实现锁。 </li>
+</ol>
+<h3 id="4-3-zk-的锁机制"><a href="#4-3-zk-的锁机制" class="headerlink" title="4.3 zk 的锁机制"></a>4.3 zk 的锁机制</h3><ol>
+<li>zk的每个节点自身就可以互相通信，并分为leader与follower。增删改查的事情只能交由leader完成。</li>
+<li>在并发抢锁时，zk是串行化的处理，会逐个对资源操作。</li>
+<li>在服务获取到锁后若断线，zk会马上知道，并通知竞争锁的服务，使这些服务可以重新开始竞争锁。</li>
+<li>zk具有最终一致性。   </li>
+</ol>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>分布式串行好还是并行好？<br>有时候串行慢，但是未必一定</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/treeforest.github.io/tags/redis/" rel="tag"># redis</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/treeforest.github.io/2020/04/15/Redis%20%E6%8E%A2%E7%B4%A2%E2%85%A0/" rel="next" title="Redis 探索Ⅰ">
+                <i class="fa fa-chevron-left"></i> Redis 探索Ⅰ
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">Ginkgo</p>
+              <p class="site-description motion-element" itemprop="description">吾生也有涯，而知也无涯</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/treeforest.github.io/archives">
+              
+                  <span class="site-state-item-count">2</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/treeforest.github.io/tags/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/treeforest" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一、Redis-持久化"><span class="nav-number">1.</span> <span class="nav-text">一、Redis 持久化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-持久化的必要性"><span class="nav-number">1.0.1.</span> <span class="nav-text">1.1 持久化的必要性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-RDB-与-AOF"><span class="nav-number">1.0.2.</span> <span class="nav-text">1.2 RDB 与 AOF</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-Redis对-RDB-与-AOF-的使用"><span class="nav-number">1.0.3.</span> <span class="nav-text">1.3 Redis对 RDB 与 AOF 的使用</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二、Redis-可用性"><span class="nav-number">2.</span> <span class="nav-text">二、Redis 可用性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-单点故障问题解决方案"><span class="nav-number">2.0.1.</span> <span class="nav-text">2.1 单点故障问题解决方案</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-压力问题解决方案"><span class="nav-number">2.0.2.</span> <span class="nav-text">2.2 压力问题解决方案</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#三、AKF微服务划分原则"><span class="nav-number">3.</span> <span class="nav-text">三、AKF微服务划分原则</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-分片集群问题"><span class="nav-number">3.0.1.</span> <span class="nav-text">3.1 分片集群问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-代理集群问题"><span class="nav-number">3.0.2.</span> <span class="nav-text">3.2 代理集群问题</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#四、Redis-是否适合做分布式锁"><span class="nav-number">4.</span> <span class="nav-text">四、Redis 是否适合做分布式锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-单Redis实例实现锁的方法"><span class="nav-number">4.0.1.</span> <span class="nav-text">4.1 单Redis实例实现锁的方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-多Redis实例实现锁的方法"><span class="nav-number">4.0.2.</span> <span class="nav-text">4.2 多Redis实例实现锁的方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-zk-的锁机制"><span class="nav-number">4.0.3.</span> <span class="nav-text">4.3 zk 的锁机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#思考"><span class="nav-number">4.0.4.</span> <span class="nav-text">思考</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ginkgo</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/treeforest.github.io/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/treeforest.github.io/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/treeforest.github.io/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/treeforest.github.io/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/treeforest.github.io/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/treeforest.github.io/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/treeforest.github.io/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/treeforest.github.io/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/treeforest.github.io/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/treeforest.github.io/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/treeforest.github.io/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
